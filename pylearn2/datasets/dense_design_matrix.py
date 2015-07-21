@@ -1360,7 +1360,8 @@ class DefaultViewConverter(object):
                            [self.shape[i] for i in (2, 0, 1)])
         topo_array_bc01 = design_matrix.reshape(bc01_shape)
         axis_order = [('b', 'c', 0, 1).index(axis) for axis in self.axes]
-        return topo_array_bc01.transpose(*axis_order)
+        # Use numpy transpose to support bcolz arrays
+        return np.transpose(topo_array_bc01, axis_order)
 
     def design_mat_to_weights_view(self, X):
         """
