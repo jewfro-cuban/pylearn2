@@ -360,7 +360,7 @@ class LiveMonitor(object):
         plt.clf()
         plt.ion()
         while True:
-            self.update_channel(channel_list)
+            self.update_channels(channel_list)
             plt.clf()
             for channel_name in self.channels:
                 plt.plot(
