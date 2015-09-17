@@ -78,13 +78,18 @@ class TwitterMonitoring(TrainExtension):
 
             if type == 'text':
                 # Construct tweet status message
-                status_msg = "%(host)s\n%(job_name)s\nE:%(epoch)d, T:%(time)s\n%(name)s: %(val)f" % \
+                status_msg = "%(host)s\n" \
+                             "%(job_name)s\n" \
+                             "E:%(epoch)d, T:%(time)s\n" \
+                             "%(name)s: %(val)f\n" \
+                             "min: %(min)f" % \
                              {'host': self.host_name,
                               'job_name': self.job_name,
                               'time': datetime.datetime.now().strftime("%H:%M:%S"),
                               'epoch': ch.epoch_record[-1],
                               'name': name,
-                              'val': float(ch.val_record[-1])}
+                              'val': float(ch.val_record[-1]),
+                              'min': float(min(ch.val_record))}
 
                 if len(status_msg) > 140:
                     logger.warn("Status message, '%s' ,longer than 140 characters: %d", status_msg, len(status_msg))
@@ -98,7 +103,7 @@ class TwitterMonitoring(TrainExtension):
             elif type == 'plot':
                 fig = plt.figure(figsize=(6, 3))
                 ax = fig.add_subplot(111)
-                ax.plot(ch.epoch_record, ch.val_record)
+                ax.plot(ch.epoch_record[1:], ch.val_record[1:])
                 fig.suptitle(name)
 
                 # Save to temp file
@@ -117,13 +122,18 @@ class TwitterMonitoring(TrainExtension):
                 else:
                     # Post tweet with reference to uploaded image
                     media_id = r.json()['media_id']
-                    image_status_msg = '%(host)s\n%(job_name)s\nE:%(epoch)d, T:%(time)s\n%(name)s: %(val)f' % \
+                    image_status_msg = '%(host)s\n' \
+                                       '%(job_name)s\n' \
+                                       'E:%(epoch)d, T:%(time)s\n' \
+                                       '%(name)s: %(val)f\n' \
+                                       'min: %(min)f' % \
                                        {'host': self.host_name,
                                         'job_name': self.job_name,
                                         'time': datetime.datetime.now().strftime("%H:%M:%S"),
                                         'epoch': ch.epoch_record[-1],
                                         'name': name,
-                                        'val': float(ch.val_record[-1])}
+                                        'val': float(ch.val_record[-1]),
+                                        'min': float(min(ch.val_record))}
                     r2 = self.twitter_api.request('statuses/update', {'status': image_status_msg,
                                                                       'media_ids': media_id,
                                                                       'user_id': self.target_user_ids})
