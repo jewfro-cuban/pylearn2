@@ -76,30 +76,22 @@ class TwitterMonitoring(TrainExtension):
         if ch.epoch_record[-1] % epoch_freq == 0:
             # Tweet status of channel according to tweet frequency
 
+            # Construct tweet status message
+            status_msg = "%(host)s\n" \
+                         "%(job_name)s\n" \
+                         "E:%(epoch)d, T:%(time)s\n" \
+                         "%(name)s: %(val)f\n" \
+                         "min: %(min)f" % \
+                         {'host': self.host_name,
+                          'job_name': self.job_name,
+                          'time': datetime.datetime.now().strftime("%H:%M:%S"),
+                          'epoch': ch.epoch_record[-1],
+                          'name': name,
+                          'val': float(ch.val_record[-1]),
+                          'min': float(min(ch.val_record))}
+
             if type == 'text':
-                # Construct tweet status message
-                status_msg = "%(host)s\n" \
-                             "%(job_name)s\n" \
-                             "E:%(epoch)d, T:%(time)s\n" \
-                             "%(name)s: %(val)f\n" \
-                             "min: %(min)f" % \
-                             {'host': self.host_name,
-                              'job_name': self.job_name,
-                              'time': datetime.datetime.now().strftime("%H:%M:%S"),
-                              'epoch': ch.epoch_record[-1],
-                              'name': name,
-                              'val': float(ch.val_record[-1]),
-                              'min': float(min(ch.val_record))}
-
-                if len(status_msg) > 140:
-                    logger.warn("Status message, '%s' ,longer than 140 characters: %d", status_msg, len(status_msg))
-
-                # Tweet status message
-                r = self.twitter_api.request('statuses/update', {'status': status_msg,
-                                                                 'user_id': self.target_user_ids})
-                if r.status_code != 200:
-                    logger.error("Error while trying to tweet message: %s. Response content: %s",
-                                 status_msg, r.response.content)
+                self._tweet_status(status_msg, self.target_user_ids)
             elif type == 'plot':
                 fig = plt.figure(figsize=(6, 3))
                 ax = fig.add_subplot(111)
@@ -111,42 +103,47 @@ class TwitterMonitoring(TrainExtension):
                 image_filename = tf.name + '.png'
                 fig.savefig(image_filename, bbox_inches='tight')
 
-                # Post a tweet with image
-                # Upload image
+                # Tweet image
                 image_file = open(image_filename, 'rb')
-                data = image_file.read()
-                r = self.twitter_api.request('media/upload', None, {'media': data,
-                                                                    'user_id': '3652159996'})
-                if r.status_code != 200:
-                    logger.error("Error while trying to upload image. Response content: %s", r.response.content)
-                else:
-                    # Post tweet with reference to uploaded image
-                    media_id = r.json()['media_id']
-                    image_status_msg = '%(host)s\n' \
-                                       '%(job_name)s\n' \
-                                       'E:%(epoch)d, T:%(time)s\n' \
-                                       '%(name)s: %(val)f\n' \
-                                       'min: %(min)f' % \
-                                       {'host': self.host_name,
-                                        'job_name': self.job_name,
-                                        'time': datetime.datetime.now().strftime("%H:%M:%S"),
-                                        'epoch': ch.epoch_record[-1],
-                                        'name': name,
-                                        'val': float(ch.val_record[-1]),
-                                        'min': float(min(ch.val_record))}
-                    r2 = self.twitter_api.request('statuses/update', {'status': image_status_msg,
-                                                                      'media_ids': media_id,
-                                                                      'user_id': self.target_user_ids})
-                    if r2.status_code != 200:
-                        logger.error("Error while trying to post plot image. Response content: %s",
-                                     r2.response.content)
+                self._tweet_image(image_file, status_msg, self.target_user_ids)
+                # Remote temporary image file
+                try:
+                    image_file.close()
+                    os.remove(image_filename)
+                except FileNotFoundError:
+                    pass
 
-                    # Remote temporary image file
-                    try:
-                        image_file.close()
-                        os.remove(image_filename)
-                    except FileNotFoundError:
-                        pass
+    def _tweet_status(self, status_msg, target_user_ids=[]):
+        if len(status_msg) > 140:
+            logger.warn("Status message, '%s' ,longer than 140 characters: %d",
+                        status_msg, len(status_msg))
+
+        # Tweet status message
+        r = self.twitter_api.request('statuses/update',
+                                     {'status': status_msg,
+                                      'user_id': target_user_ids})
+        if r.status_code != 200:
+            logger.error("Error while trying to tweet message: %s. Response content: %s",
+                         status_msg, r.response.content)
+        return r
+
+    def _tweet_image(self, image_file, status_msg, target_user_ids=[]):
+        # Post a tweet with image
+        # Upload image
+        data = image_file.read()
+        r = self.twitter_api.request('media/upload', None, {'media': data,
+                                                            'user_id': '3652159996'})
+        if r.status_code != 200:
+            logger.error("Error while trying to upload image. Response content: %s", r.response.content)
+        else:
+            # Post tweet with reference to uploaded image
+            media_id = r.json()['media_id']
+            r2 = self.twitter_api.request('statuses/update', {'status': status_msg,
+                                                              'media_ids': media_id,
+                                                              'user_id': target_user_ids})
+            if r2.status_code != 200:
+                logger.error("Error while trying to post plot image. Response content: %s",
+                             r2.response.content)
 
     @wraps(TrainExtension.on_monitor)
     def on_monitor(self, model, dataset, algorithm):
