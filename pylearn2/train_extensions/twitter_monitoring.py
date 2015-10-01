@@ -10,7 +10,7 @@ from tempfile import TemporaryFile
 # 3rdparty
 import numpy
 import matplotlib.pyplot as plt
-from TwitterAPI import TwitterAPI, TwitterConnectionError
+from TwitterAPI import TwitterAPI
 from pylearn2.monitor import Monitor
 from pylearn2.train_extensions import TrainExtension
 # local
@@ -139,6 +139,7 @@ class TwitterManager(object):
             if r2.status_code != 200:
                 logger.error("Error while trying to post plot image. Response content: %s",
                              r2.response.content)
+
     @staticmethod
     def _chunk_string(string, length):
         return (string[0+i:length+i] for i in range(0, len(string), length))
