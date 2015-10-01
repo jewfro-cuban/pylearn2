@@ -64,13 +64,15 @@ class TwitterManager(object):
         # Split long message to chunks
         status_msg_chunks = list(self._chunk_string(status_msg, STATUS_MSG_MAX_LEN - 2*len(continuation_string)))
 
-        for k, msg in enumerate(status_msg_chunks):
-            if k == 0:
-                status_msg_chunks[k] = msg + continuation_string
-            elif k == len(status_msg_chunks) - 1:
-                status_msg_chunks[k] = continuation_string + msg
-            else:
-                status_msg_chunks[k] = continuation_string + msg + continuation_string
+        # Add separating continuation string for better readability
+        if len(status_msg_chunks) > 1:
+            for k, msg in enumerate(status_msg_chunks):
+                if k == 0:
+                    status_msg_chunks[k] = msg + continuation_string
+                elif k == len(status_msg_chunks) - 1:
+                    status_msg_chunks[k] = continuation_string + msg
+                else:
+                    status_msg_chunks[k] = continuation_string + msg + continuation_string
 
         # Tweet messages in flipped order for natural reading
         results = [self._tweet_status_msg(msg) for msg in status_msg_chunks[::-1]]
