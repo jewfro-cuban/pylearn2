@@ -318,6 +318,7 @@ def _save(filepath, obj):
     if os.path.exists(save_dir) and not os.path.isdir(save_dir):
         raise IOError("save path %s exists, not a directory" % save_dir)
     elif not os.access(save_dir, os.W_OK):
+
         raise IOError("permission error creating %s" % filepath)
     try:
         if joblib_available and filepath.endswith('.joblib'):
