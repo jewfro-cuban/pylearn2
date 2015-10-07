@@ -194,7 +194,7 @@ class TwitterMonitoring(TrainExtension):
         type = ch_info['type']
         ch = monitor.channels[name]
 
-        if ch.epoch_record[-1] % epoch_freq == 0:
+        if (len(ch.epoch_record) > 1) and (ch.epoch_record[-1] % epoch_freq == 0):
             # Tweet status of channel according to tweet frequency
 
             # Construct tweet status message
