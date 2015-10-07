@@ -525,3 +525,28 @@ def load_train_file(config_file_path, environ=None):
     os.environ["PYLEARN2_TRAIN_FILE_STEM"] = config_file_full_stem.split('/')[-1]
 
     return yaml_parse.load_path(config_file_path, environ=environ)
+
+
+def load_pickled_gpu_model(model_filename):
+    """
+    Utility to load models that were created on a gpu machine, to be used on a cpu machine.
+    Uses the theano.config.experimental.unpickle_gpu_on_cpu flag which makes the pylearn2 script obsolete.
+
+    :type model_filename: str
+    :param model_filename: model filename
+
+    :type: pylearn2.models.*
+    :return: model that can be used on cpu-machine
+    """
+    import theano
+    # Store flag value to be restored once done
+    unpickle_gpu_on_cpu_prev_value = theano.config.experimental.unpickle_gpu_on_cpu
+
+    try:
+        # Turn flag on and load model
+        theano.config.experimental.unpickle_gpu_on_cpu = True
+        model = load(model_filename)
+        return model
+    finally:
+        # Restore flag value
+        theano.config.experimental.unpickle_gpu_on_cpu = unpickle_gpu_on_cpu_prev_value
