@@ -62,15 +62,17 @@ class Report(object):
             # TODO: support also max value channels
             min_idx = numpy.argmin(y_values[1:]) + 1
             min_val = y_values[min_idx]
-            median_val = numpy.median(y_values[1:])
             ax.scatter(min_idx, min_val, marker='o', color=color, s=60)
 
             xy = (min_idx, min_val)
-            xytext = (min_idx + 2, min_val - 0.1*median_val)
-            ax.annotate(str(min_val), xy=xy, xytext=xytext,
-                        arrowprops=dict(facecolor='black',
-                                        arrowstyle="->",
-                                        connectionstyle="arc,angleA=0,armA=20,angleB=-90,armB=15,rad=7"))
+            xytext_offset = (-50, 30)
+            ax.annotate("%.3f" % min_val,
+                        xy=xy,
+                        xycoords='data',
+                        xytext=xytext_offset,
+                        textcoords='offset points',
+                        arrowprops=dict(arrowstyle="->",
+                                        facecolor='black'))
 
         plt.hold = False
         ax.legend()
