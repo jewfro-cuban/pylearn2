@@ -26,7 +26,7 @@ class Report(object):
         self.line_styles = ['-', '-.', '--', ':']
 
     def plot(self, model_input, channel_names, fig=None, title='',
-             record_type='epoch', figsize=(6, 3), show=False, output_filename=None):
+             record_type='epoch', figsize=(18, 9), show=False, output_filename=None):
 
         if isinstance(model_input, str):
             model = serial.load_pickled_gpu_model(model_input)
