@@ -9,8 +9,6 @@ import pickle
 from functools import wraps
 from tempfile import TemporaryFile
 # 3rdparty
-import numpy
-import matplotlib.pyplot as plt
 from pylearn2.train_extensions import TrainExtension
 from pylearn2.utils.model_report import Report
 # local
