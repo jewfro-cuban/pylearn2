@@ -9,6 +9,7 @@ import pickle
 from functools import wraps
 from tempfile import TemporaryFile
 # 3rdparty
+import matplotlib.pyplot as plt
 from pylearn2.train_extensions import TrainExtension
 from pylearn2.utils.model_report import Report
 # local
@@ -44,6 +45,11 @@ class PlotMonitoring(TrainExtension):
         self.output_filename = output_filename
         self.report = Report()
         self.host_name = socket.gethostname() + '_' + str(os.getpid())
+        self.fig = plt.figure()
+        self.figsize = (18, 9)
+
+    def __del__(self):
+        plt.close(self.fig)
 
     @wraps(TrainExtension.on_monitor)
     def on_monitor(self, model, dataset, algorithm):
@@ -57,4 +63,6 @@ class PlotMonitoring(TrainExtension):
         self.report.plot(model,
                          title=self.job_name,
                          channel_names=self.channel_names,
+                         fig=self.fig,
+                         figsize=self.figsize,
                          output_filename=self.output_filename)

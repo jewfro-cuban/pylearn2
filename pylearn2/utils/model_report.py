@@ -48,6 +48,7 @@ class Report(object):
         else:
             plt.figure(fig.number)
             ax = plt.gca()
+            ax.cla()
 
         plt.hold = True
         for channel_name in channel_names:
